@@ -102,3 +102,6 @@ ENV/
 
 # qa result
 result.log
+
+# data files
+*.data.txt
