@@ -3,6 +3,7 @@ import argparse
 import math
 import random
 import sys
+import time
 from copy import deepcopy
 
 import pygame
@@ -32,6 +33,12 @@ class City:
         """
         return str(self)
 
+    def distance_to(self, other):
+        """Compute distance between self and other."""
+        dx = self.x - other.x
+        dy = self.y - other.y
+        return math.sqrt(dx**2 + dy**2)
+
     def __eq__(self, other):
         """Compare two cities."""
         if (self.name == other.name
@@ -48,18 +55,13 @@ class Individu:
         """Init Individu object."""
         # list of City objects
         self.path = path
-        # path length
-        self.length = self.length()
-        # fitness
-        self.fitness = self.fitness()
 
-    def length(self):
+    def path_length(self):
         """Compute path length according to cities order."""
         path_length = 0
         for i in range(0, len(self.path)-1):
-            dx = self.path[i].x - self.path[i+1].x
-            dy = self.path[i].y - self.path[i+1].y
-            path_length += math.sqrt(dx**2 + dy**2)
+            path_length += self.path[i].distance_to(self.path[i+1])
+        path_length += self.path[-1].distance_to(self.path[0])
         return path_length
 
     def fitness(self):
@@ -69,12 +71,12 @@ class Individu:
         In this case we want to keep only the shortest path
         so we have to invert the result.
         """
-        return 1/self.length
+        return 1000/self.path_length()
 
     def __str__(self):
         """Print object in a human readle way."""
-        length = "[Path length = " + str(self.length) + ", "
-        fitness = "fitness = " + str(self.fitness) + ", "
+        length = "[Path length = " + str(self.path_length()) + ", "
+        fitness = "fitness = " + str(self.fitness()) + ", "
         path = "path : "
         for c in self.path:
             path += c.name + " -> "
@@ -96,13 +98,39 @@ class Individu:
                 return False
         return True
 
+    def __lt__(self, other):
+        """Compare objects."""
+        return self.fitness() < other.fitness()
 
-class Population:
-    """Class that take possible path as values."""
+    def __len__(self):
+        """Return path length."""
+        return len(self.path)
 
-    def __init__(self, individus):
-        """Init Population object."""
-        self.individus = individus
+    def __getitem__(self, i):
+        """Return city at i."""
+        if i < len(self.path):
+            return self.path[i]
+        else:
+            raise IndexError("max value is ", len(self.path), "current ", i)
+
+    def __setitem__(self, i, value):
+        """Set city at i."""
+        if i < len(self.path):
+            self.path[i] = value
+        else:
+            raise IndexError("max value is ", len(self.path), "current ", i)
+
+    def index(self, value):
+        """Return index of value in self.path."""
+        return self.path.index(value)
+
+    def insert(self, i, value):
+        """Insert value in self.path at i."""
+        self.path.append(i, value)
+
+    def __contains__(self, city):
+        """Return if city is in path."""
+        return city in self.path
 
 
 screen_x = 500
@@ -164,7 +192,8 @@ def draw_line(screen, font, cities):
     screen.fill(0)
     positions = [(c.x, c.y) for c in cities]
     pygame.draw.lines(screen, city_color, True, positions)
-    text = font.render("Un chemin, pas le meilleur!", True, font_color)
+    text = font.render("Meilleur chemin trouvé actuellement!",
+                       True, font_color)
     textRect = text.get_rect()
     screen.blit(text, textRect)
     pygame.display.flip()
@@ -172,6 +201,8 @@ def draw_line(screen, font, cities):
 
 def init_solutions(cities, solutions, M):
     """Init first random solutions."""
+    solutions.append(Individu(cities))
+    cities = deepcopy(cities)
     for i in range(1, M):
         random.shuffle(cities, random.random)
         new_individu = Individu(cities)
@@ -180,6 +211,69 @@ def init_solutions(cities, solutions, M):
             new_individu = Individu(cities)
         solutions.append(new_individu)
         cities = deepcopy(cities)
+
+
+def mutate_using_2_opt(solutions):
+    """Mutate using 2opt method."""
+    for solution in solutions:
+        length = len(solution)
+        # if ab + cd > ac + bd -> swap b and c
+        # d1 = ab + cd
+        # d2 = ac + bd
+        for i in range(0, length):
+            i1 = (i+1) % length
+            i2 = (i+2) % length
+            i3 = (i+3) % length
+            d1 = solution[i].distance_to(solution[i1])
+            d1 += solution[i2].distance_to(solution[i3])
+            d2 = solution[i].distance_to(solution[i2])
+            d2 += solution[i1].distance_to(solution[i3])
+            if d1 > d2:
+                solution[i1], solution[i2] = solution[i2], solution[i1]
+
+
+def multiply_using_gSC(solutions, number_of_multiplication):
+    """Multiply using greedy_subtour_crossover function."""
+    i = 0
+    while i < number_of_multiplication*2:
+        new_individual = greedy_subtour_crossover(solutions[i], solutions[i+1])
+        solutions.append(new_individual)
+        i += 2
+
+
+def greedy_subtour_crossover(ga, gb):
+    """Multiply individuals according to Greedy Subtour Crossover."""
+    fa = True
+    fb = True
+    g = list()
+
+    length = len(ga)-1
+    t = ga[random.randint(0, length)]
+    x = ga.index(t)
+    y = gb.index(t)
+    g.insert(0, t)
+
+    while fa is True or fb is True:
+        x = x - 1
+        y = (y + 1) % length
+        if fa is True:
+            if ga[x] not in g:
+                g.append(ga[x])
+            else:
+                fa = False
+
+        if fb is True:
+            if gb[y] not in g:
+                g.insert(0, gb[y])
+            else:
+                fb = False
+
+    for city in ga:
+        if city not in g:
+            g.append(city)
+
+    g = Individu(g)
+    return g
 
 
 def ga_solve(filename=None, gui=True, maxtime=0):
@@ -203,29 +297,60 @@ def ga_solve(filename=None, gui=True, maxtime=0):
     # draw the line
     draw_line(screen, font, cities)
 
+    # number of individuals
+    M = len(cities) * 3
+    pe = 20/100
     # solve and draw here
     # init. Generate M random individuals
-    M = len(cities) * 2
     solutions = []
-    solutions.append(Individu(cities))
-    init_solutions(deepcopy(cities), solutions, M)
+    init_solutions(cities, solutions, M)
 
-    print('\n'.join(str(i) for i in solutions))
+    best_solution = solutions[0].fitness()
+    stagnation_len = 0
+    keep_finding = True
+    while True:
 
-    # Natural selection. Eliminate the worst pe% of the population
+        while keep_finding:
+            with open('log.txt', 'a') as fp:
+                fp.write(str(solutions[0].fitness()) + "\n")
+            if solutions[0].fitness() == best_solution:
+                if stagnation_len < 5:
+                    with open('log.txt', 'a') as fp:
+                        fp.write("Warning, stagnation!\n")
+                    stagnation_len += 1
+                else:
+                    with open('log.txt', 'a') as fp:
+                        fp.write("Stagnated for too long, exiting!\n")
+                    keep_finding = False
+            else:
+                best_solution = solutions[0].fitness()
+                stagnation_len = 0
 
-    # Multplication Choose M * pe/100 pairs of individuals randomly
-    # and produce result of pair multiplication
+            # sort solutions in order to remove the worst population
+            solutions = sorted(solutions, reverse=True)
 
-    # Mutation by 2 opt
+            # draw the line
+            draw_line(screen, font, solutions[0])
 
-    #
+            # Natural selection. Eliminate the worst pe% of the population
+            quantity_to_eliminate = int(M * pe)
+            if quantity_to_eliminate % 2 is not 0:
+                quantity_to_eliminate += 1
+            del solutions[-quantity_to_eliminate:]
 
-    # wait for quit
-    """while True:
+            # Multplication Choose M * pe/100 pairs of individuals randomly
+            # and produce result of pair multiplication
+
+            multiply_using_gSC(solutions, quantity_to_eliminate)
+
+            # Mutation by 2 opt
+            mutate_using_2_opt(solutions)
+
+            time.sleep(1)
+
         event = pygame.event.wait()
         if event.type == KEYDOWN or event.type == QUIT:
-            break"""
+            break
 
 
 if __name__ == "__main__":
