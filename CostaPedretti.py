@@ -2,13 +2,16 @@
 import argparse
 import math
 import random
+import secrets
 import sys
 import time
-from copy import deepcopy
+from copy import copy
 
 import pygame
 from pygame.locals import K_RETURN, KEYDOWN, MOUSEBUTTONDOWN, QUIT
 
+
+app_desc = "Traveling salesman problem"
 
 class City:
     """Object that take the name of the city and it's coordonates."""
@@ -55,8 +58,10 @@ class Individu:
         """Init Individu object."""
         # list of City objects
         self.path = path
+        self.length = len(self.path)
+        self.path_length = self.p_length()
 
-    def path_length(self):
+    def p_length(self):
         """Compute path length according to cities order."""
         path_length = 0
         for i in range(0, len(self.path)-1):
@@ -71,11 +76,11 @@ class Individu:
         In this case we want to keep only the shortest path
         so we have to invert the result.
         """
-        return 1000/self.path_length()
+        return 1000/self.path_length
 
     def __str__(self):
         """Print object in a human readle way."""
-        length = "[Path length = " + str(self.path_length()) + ", "
+        length = "[Path length = " + str(self.path_length) + ", "
         fitness = "fitness = " + str(self.fitness()) + ", "
         path = "path : "
         for c in self.path:
@@ -93,6 +98,8 @@ class Individu:
 
     def __eq__(self, other):
         """Compare two individuals."""
+        if len(self) != len(other):
+            return False
         for i in range(0, len(self.path)):
             if self.path[i] != other.path[i]:
                 return False
@@ -104,7 +111,7 @@ class Individu:
 
     def __len__(self):
         """Return path length."""
-        return len(self.path)
+        return self.length
 
     def __getitem__(self, i):
         """Return city at i."""
@@ -131,6 +138,10 @@ class Individu:
     def __contains__(self, city):
         """Return if city is in path."""
         return city in self.path
+
+    def extend(self, datas):
+        """Extend path."""
+        self.path.extend(datas)
 
 
 screen_x = 500
@@ -187,13 +198,12 @@ def collect_cities(screen, font, cities):
     return collecting
 
 
-def draw_line(screen, font, cities):
+def draw_line(screen, font, cities, text):
     """Draw lines from cities list."""
     screen.fill(0)
     positions = [(c.x, c.y) for c in cities]
     pygame.draw.lines(screen, city_color, True, positions)
-    text = font.render("Meilleur chemin trouvé actuellement!",
-                       True, font_color)
+    text = font.render(text, True, font_color)
     textRect = text.get_rect()
     screen.blit(text, textRect)
     pygame.display.flip()
@@ -202,43 +212,95 @@ def draw_line(screen, font, cities):
 def init_solutions(cities, solutions, M):
     """Init first random solutions."""
     solutions.append(Individu(cities))
-    cities = deepcopy(cities)
     for i in range(1, M):
+        create_random_individual(cities, solutions)
+
+
+def create_random_individual(cities, solutions):
+    """Create random individual from cities list."""
+    cities = copy(cities)
+    random.shuffle(cities, random.random)
+    new_individu = Individu(cities)
+    while(new_individu in solutions):
         random.shuffle(cities, random.random)
         new_individu = Individu(cities)
-        while(new_individu in solutions):
-            random.shuffle(cities, random.random)
-            new_individu = Individu(cities)
-        solutions.append(new_individu)
-        cities = deepcopy(cities)
+    solutions.insert(0, new_individu)
 
 
-def mutate_using_2_opt(solutions):
-    """Mutate using 2opt method."""
-    for solution in solutions:
-        length = len(solution)
-        # if ab + cd > ac + bd -> swap b and c
-        # d1 = ab + cd
-        # d2 = ac + bd
-        for i in range(0, length):
-            i1 = (i+1) % length
-            i2 = (i+2) % length
-            i3 = (i+3) % length
-            d1 = solution[i].distance_to(solution[i1])
-            d1 += solution[i2].distance_to(solution[i3])
-            d2 = solution[i].distance_to(solution[i2])
-            d2 += solution[i1].distance_to(solution[i3])
-            if d1 > d2:
-                solution[i1], solution[i2] = solution[i2], solution[i1]
+def swap_two_opt(solution, i, k):
+    """Swap cities between i and k in solution."""
+    path = solution.path
+    new_solution = path[0:i]
+    new_solution.extend(reversed(path[i:k + 1]))
+    new_solution.extend(path[k + 1:])
+    new_solution = Individu(new_solution)
+    assert len(new_solution) == len(solution)
+    return new_solution
+
+def extended_two_opt(solution, gui, screen, font, text):
+    """
+    Peforms 2-opt.
+
+    Source :
+    https://github.com/rellermeyer/99tsp/blob/master/python/2opt/TSP2opt.py
+    """
+    improvement = False
+    best_solution = solution
+    best_distance = solution.path_length
+    length = len(solution)
+    """while improvement:
+        improvement = False"""
+    for i in range(length - 1):
+        for j in range(i, length):
+            new_route = swap_two_opt(best_solution, i, j)
+            new_distance = new_route.path_length
+            if new_distance < best_distance:
+                best_distance = new_distance
+                best_solution = new_route
+                improvement = True
+                if gui:
+                    draw_line(screen, font, best_solution, text)
+    assert len(best_solution) == length
+    return best_solution
+
+def two_opt(solution):
+    """
+    Peforms 2-opt.
+
+    Source :
+    https://github.com/rellermeyer/99tsp/blob/master/python/2opt/TSP2opt.py
+    """
+
+
+    improvement = True
+    best_distance = solution.path_length
+    length = len(solution)
+
+    i = secrets.randbelow(length - 1)
+    j = i
+    while j <= i:
+        j = secrets.randbelow(length)
+
+    new_route = swap_two_opt(solution, i, j)
+    new_distance = new_route.path_length
+    if new_distance < best_distance:
+        solution = new_route
+
+    assert len(solution) == length
+    return solution
+
+def mutate_using_two_opt(solutions):
+    """Mutate using special two opt."""
+    for i in range(len(solutions)):
+        solutions[i] = two_opt(solutions[i])
 
 
 def multiply_using_gSC(solutions, number_of_multiplication):
     """Multiply using greedy_subtour_crossover function."""
     i = 0
-    while i < number_of_multiplication*2:
-        new_individual = greedy_subtour_crossover(solutions[i], solutions[i+1])
+    for i in range(number_of_multiplication):
+        new_individual = greedy_subtour_crossover(solutions[i], solutions[secrets.randbelow(len(solutions))])
         solutions.append(new_individual)
-        i += 2
 
 
 def greedy_subtour_crossover(ga, gb):
@@ -248,8 +310,9 @@ def greedy_subtour_crossover(ga, gb):
     g = list()
 
     length = len(ga)-1
-    t = ga[random.randint(0, length)]
-    x = ga.index(t)
+    rand = secrets.randbelow(length)
+    t = ga[rand]
+    x = rand
     y = gb.index(t)
     g.insert(0, t)
 
@@ -268,9 +331,11 @@ def greedy_subtour_crossover(ga, gb):
             else:
                 fb = False
 
-    for city in ga:
-        if city not in g:
-            g.append(city)
+    cities_not_in_g = [city for city in ga if city not in g]
+
+    random.shuffle(cities_not_in_g, random.random)
+    for city in cities_not_in_g:
+        g.append(city)
 
     g = Individu(g)
     return g
@@ -278,6 +343,7 @@ def greedy_subtour_crossover(ga, gb):
 
 def ga_solve(filename=None, gui=True, maxtime=0):
     """Solve using Genetic Algorithm."""
+    start = time.time()
     cities = []
     collecting = False
 
@@ -287,74 +353,78 @@ def ga_solve(filename=None, gui=True, maxtime=0):
         collecting = True
 
     # init pygame and draw cities
-    window, screen, font = init_game()
-    draw(screen, font, cities)
+    if gui:
+        window, screen, font = init_game()
+        draw(screen, font, cities)
 
     # if file is not specified, collect points from user input
     while collecting:
         collecting = collect_cities(screen, font, cities)
 
-    # draw the line
-    draw_line(screen, font, cities)
+    if gui:
+        # draw the line
+        draw_line(screen, font, cities, "Situation initiale!")
 
     # number of individuals
-    M = len(cities) * 3
-    pe = 20/100
+    M = 30 if len(cities) >= 50 else 60
+
+    # TODO find a way to dynamicaly change the percentage during
+    # execution
+    pe = 3/10
     # solve and draw here
     # init. Generate M random individuals
     solutions = []
     init_solutions(cities, solutions, M)
 
-    best_solution = solutions[0].fitness()
+    best_solution = 1000
     stagnation_len = 0
     keep_finding = True
-    while True:
 
-        while keep_finding:
-            with open('log.txt', 'a') as fp:
-                fp.write(str(solutions[0].fitness()) + "\n")
-            if solutions[0].fitness() == best_solution:
-                if stagnation_len < 5:
-                    with open('log.txt', 'a') as fp:
-                        fp.write("Warning, stagnation!\n")
-                    stagnation_len += 1
-                else:
-                    with open('log.txt', 'a') as fp:
-                        fp.write("Stagnated for too long, exiting!\n")
-                    keep_finding = False
+    while keep_finding and (maxtime is 0 or time.time() - start < maxtime):
+
+        # sort solutions in order to remove the worst population
+        solutions = sorted(solutions, reverse=True)
+
+
+        # draw the line
+        if gui:
+            draw_line(screen, font, solutions[0], "Meilleur chemin trouvé actuellement!")
+
+        if solutions[0].fitness() == best_solution:
+            if stagnation_len < 1:
+                stagnation_len += 1
+                solutions[0] = extended_two_opt(solutions[0], gui, screen, font, "Meilleur chemin trouvé actuellement!")
             else:
-                best_solution = solutions[0].fitness()
-                stagnation_len = 0
+                keep_finding = False
+        else:
+            best_solution = solutions[0].fitness()
+            stagnation_len = 0
 
-            # sort solutions in order to remove the worst population
-            solutions = sorted(solutions, reverse=True)
-
-            # draw the line
-            draw_line(screen, font, solutions[0])
-
-            # Natural selection. Eliminate the worst pe% of the population
-            quantity_to_eliminate = int(M * pe)
-            if quantity_to_eliminate % 2 is not 0:
-                quantity_to_eliminate += 1
-            del solutions[-quantity_to_eliminate:]
+            # Natural selection
+        quantity_to_eliminate = int(M * pe)
+        del solutions[-quantity_to_eliminate:]
 
             # Multplication Choose M * pe/100 pairs of individuals randomly
             # and produce result of pair multiplication
 
-            multiply_using_gSC(solutions, quantity_to_eliminate)
+        multiply_using_gSC(solutions, M - len(solutions))
 
             # Mutation by 2 opt
-            mutate_using_2_opt(solutions)
+        mutate_using_two_opt(solutions)
 
-            time.sleep(1)
+    """if gui:
+        draw_line(screen, font, solutions[0], "Résultat possible!")
+        while True:
+            event = pygame.event.wait()
+            if event.type == KEYDOWN or event.type == QUIT:
+                break"""
 
-        event = pygame.event.wait()
-        if event.type == KEYDOWN or event.type == QUIT:
-            break
-
+    cities_name = list()
+    for city in solutions[0].path:
+        cities_name.append(city.name)
+    return (solutions[0].path_length, cities_name)
 
 if __name__ == "__main__":
-    app_desc = "Traveling salesman problem"
     parser = argparse.ArgumentParser(description=app_desc)
     parser.add_argument(
         "--nogui",

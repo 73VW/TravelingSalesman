@@ -102,9 +102,13 @@ ENV/
 
 # qa result
 result.log
+errrors.log
 
 # data files
 *.data.txt
 
 # source pdf
 arob98.pdf
+
+# cprof
+*.cprof
