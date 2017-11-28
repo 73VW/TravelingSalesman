@@ -112,3 +112,6 @@ arob98.pdf
 
 # cprof
 *.cprof
+
+# cities generator
+cities_generator.py

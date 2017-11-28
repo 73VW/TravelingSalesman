@@ -1,0 +1,182 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module CostaPedretti</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>CostaPedretti</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:e%3A%5Cdocuments%5C3eme%5Cia%5Ctp%5Ctravelingsalesman%5Ccostapedretti.py">e:\documents\3eme\ia\tp\travelingsalesman\costapedretti.py</a></font></td></tr></table>
+    <p><tt>Traveling&nbsp;salesman&nbsp;problem&nbsp;solver.<br>
+&nbsp;<br>
+The&nbsp;following&nbsp;code&nbsp;is&nbsp;used&nbsp;to&nbsp;try&nbsp;to&nbsp;find&nbsp;a&nbsp;solution&nbsp;to&nbsp;the&nbsp;TSP.<br>
+Using&nbsp;<a href="#City">City</a>&nbsp;and&nbsp;<a href="#Individual">Individual</a>&nbsp;(path)&nbsp;class&nbsp;it&nbsp;is&nbsp;possible&nbsp;to&nbsp;find&nbsp;a&nbsp;possible<br>
+solution&nbsp;approaching&nbsp;the&nbsp;real&nbsp;result.&nbsp;This&nbsp;code&nbsp;is&nbsp;optimized&nbsp;to&nbsp;take&nbsp;less&nbsp;time<br>
+to&nbsp;execute&nbsp;not&nbsp;to&nbsp;find&nbsp;the&nbsp;absolute&nbsp;shortest&nbsp;path.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="argparse.html">argparse</a><br>
+<a href="math.html">math</a><br>
+</td><td width="25%" valign=top><a href="pygame.html">pygame</a><br>
+<a href="random.html">random</a><br>
+</td><td width="25%" valign=top><a href="secrets.html">secrets</a><br>
+<a href="sys.html">sys</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="CostaPedretti.html#City">City</a>
+</font></dt><dt><font face="helvetica, arial"><a href="CostaPedretti.html#Individual">Individual</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="City">class <strong>City</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Object&nbsp;that&nbsp;take&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;city&nbsp;and&nbsp;it's&nbsp;coordonates.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="City-__eq__"><strong>__eq__</strong></a>(self, other)</dt><dd><tt>Compare&nbsp;two&nbsp;cities.</tt></dd></dl>
+
+<dl><dt><a name="City-__init__"><strong>__init__</strong></a>(self, name, x, y)</dt><dd><tt>Init&nbsp;city&nbsp;<a href="builtins.html#object">object</a>.</tt></dd></dl>
+
+<dl><dt><a name="City-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><tt>Represent&nbsp;<a href="builtins.html#object">object</a>.<br>
+&nbsp;<br>
+Commonly&nbsp;used&nbsp;when&nbsp;printing&nbsp;a&nbsp;list&nbsp;of&nbsp;objects.</tt></dd></dl>
+
+<dl><dt><a name="City-__str__"><strong>__str__</strong></a>(self)</dt><dd><tt>Print&nbsp;<a href="builtins.html#object">object</a>&nbsp;in&nbsp;a&nbsp;human&nbsp;readle&nbsp;way.</tt></dd></dl>
+
+<dl><dt><a name="City-distance_to"><strong>distance_to</strong></a>(self, other)</dt><dd><tt>Compute&nbsp;distance&nbsp;between&nbsp;self&nbsp;and&nbsp;other.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__hash__</strong> = None</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Individual">class <strong>Individual</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Class&nbsp;that&nbsp;take&nbsp;a&nbsp;possible&nbsp;path&nbsp;as&nbsp;value.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Individual-__contains__"><strong>__contains__</strong></a>(self, city)</dt><dd><tt>Return&nbsp;if&nbsp;city&nbsp;is&nbsp;in&nbsp;path.</tt></dd></dl>
+
+<dl><dt><a name="Individual-__eq__"><strong>__eq__</strong></a>(self, other)</dt><dd><tt>Compare&nbsp;two&nbsp;individuals.</tt></dd></dl>
+
+<dl><dt><a name="Individual-__getitem__"><strong>__getitem__</strong></a>(self, i)</dt><dd><tt>Return&nbsp;city&nbsp;at&nbsp;i.</tt></dd></dl>
+
+<dl><dt><a name="Individual-__init__"><strong>__init__</strong></a>(self, path)</dt><dd><tt>Init&nbsp;<a href="#Individual">Individual</a>&nbsp;<a href="builtins.html#object">object</a>.</tt></dd></dl>
+
+<dl><dt><a name="Individual-__len__"><strong>__len__</strong></a>(self)</dt><dd><tt>Return&nbsp;path&nbsp;length.</tt></dd></dl>
+
+<dl><dt><a name="Individual-__lt__"><strong>__lt__</strong></a>(self, other)</dt><dd><tt>Compare&nbsp;objects.</tt></dd></dl>
+
+<dl><dt><a name="Individual-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><tt>Represent&nbsp;<a href="builtins.html#object">object</a>.<br>
+&nbsp;<br>
+Commonly&nbsp;used&nbsp;when&nbsp;printing&nbsp;a&nbsp;list&nbsp;of&nbsp;objects.</tt></dd></dl>
+
+<dl><dt><a name="Individual-__setitem__"><strong>__setitem__</strong></a>(self, i, value)</dt><dd><tt>Set&nbsp;value&nbsp;for&nbsp;city&nbsp;at&nbsp;i.</tt></dd></dl>
+
+<dl><dt><a name="Individual-__str__"><strong>__str__</strong></a>(self)</dt><dd><tt>Print&nbsp;<a href="builtins.html#object">object</a>&nbsp;in&nbsp;a&nbsp;human&nbsp;readle&nbsp;way.</tt></dd></dl>
+
+<dl><dt><a name="Individual-extend"><strong>extend</strong></a>(self, datas)</dt><dd><tt>Extend&nbsp;path.</tt></dd></dl>
+
+<dl><dt><a name="Individual-fitness"><strong>fitness</strong></a>(self)</dt><dd><tt>Compute&nbsp;fitness&nbsp;value&nbsp;in&nbsp;order&nbsp;to&nbsp;choose&nbsp;who&nbsp;lives.<br>
+&nbsp;<br>
+In&nbsp;this&nbsp;case&nbsp;we&nbsp;want&nbsp;to&nbsp;keep&nbsp;only&nbsp;the&nbsp;shortest&nbsp;path<br>
+so&nbsp;we&nbsp;have&nbsp;to&nbsp;invert&nbsp;the&nbsp;result.</tt></dd></dl>
+
+<dl><dt><a name="Individual-index"><strong>index</strong></a>(self, value)</dt><dd><tt>Return&nbsp;index&nbsp;of&nbsp;value&nbsp;in&nbsp;self.<strong>path</strong>.</tt></dd></dl>
+
+<dl><dt><a name="Individual-insert"><strong>insert</strong></a>(self, i, value)</dt><dd><tt>Insert&nbsp;value&nbsp;in&nbsp;self.<strong>path</strong>&nbsp;at&nbsp;i.</tt></dd></dl>
+
+<dl><dt><a name="Individual-p_length"><strong>p_length</strong></a>(self)</dt><dd><tt>Compute&nbsp;path&nbsp;length&nbsp;according&nbsp;to&nbsp;cities&nbsp;order.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__hash__</strong> = None</dl>
+
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-collect_cities"><strong>collect_cities</strong></a>(screen, font, cities)</dt><dd><tt>Collect&nbsp;cities&nbsp;from&nbsp;user&nbsp;input.</tt></dd></dl>
+ <dl><dt><a name="-create_random_individual"><strong>create_random_individual</strong></a>(cities, solutions)</dt><dd><tt>Create&nbsp;random&nbsp;individual&nbsp;from&nbsp;cities&nbsp;list.</tt></dd></dl>
+ <dl><dt><a name="-draw"><strong>draw</strong></a>(screen, font, positions)</dt><dd><tt>Draw&nbsp;cities&nbsp;on&nbsp;window.</tt></dd></dl>
+ <dl><dt><a name="-draw_line"><strong>draw_line</strong></a>(screen, font, cities, text)</dt><dd><tt>Draw&nbsp;lines&nbsp;from&nbsp;cities&nbsp;list.</tt></dd></dl>
+ <dl><dt><a name="-extended_two_opt"><strong>extended_two_opt</strong></a>(solution, gui, screen, font, text)</dt><dd><tt>Peforms&nbsp;2-opt.<br>
+&nbsp;<br>
+Source&nbsp;:<br>
+https://github.com/rellermeyer/99tsp/blob/master/python/2opt/TSP2opt.py</tt></dd></dl>
+ <dl><dt><a name="-fillArrayWithData"><strong>fillArrayWithData</strong></a>(fileName, cities)</dt><dd><tt>Fill&nbsp;city&nbsp;list&nbsp;with&nbsp;datas&nbsp;from&nbsp;[filename].</tt></dd></dl>
+ <dl><dt><a name="-ga_solve"><strong>ga_solve</strong></a>(filename=None, gui=True, maxtime=0)</dt><dd><tt>Solve&nbsp;using&nbsp;Genetic&nbsp;Algorithm.</tt></dd></dl>
+ <dl><dt><a name="-greedy_subtour_crossover"><strong>greedy_subtour_crossover</strong></a>(ga, gb)</dt><dd><tt>Multiply&nbsp;individuals&nbsp;according&nbsp;to&nbsp;Greedy&nbsp;Subtour&nbsp;Crossover.<br>
+&nbsp;<br>
+Source:&nbsp;<a href="http://www.gcd.org/sengoku/docs/arob98.pdf">http://www.gcd.org/sengoku/docs/arob98.pdf</a></tt></dd></dl>
+ <dl><dt><a name="-init_game"><strong>init_game</strong></a>()</dt><dd><tt>Init&nbsp;pygame&nbsp;interface.</tt></dd></dl>
+ <dl><dt><a name="-init_solutions"><strong>init_solutions</strong></a>(cities, solutions, M)</dt><dd><tt>Init&nbsp;first&nbsp;random&nbsp;solutions.</tt></dd></dl>
+ <dl><dt><a name="-multiply_using_gSC"><strong>multiply_using_gSC</strong></a>(solutions, number_of_multiplication)</dt><dd><tt>Multiply&nbsp;using&nbsp;greedy_subtour_crossover&nbsp;function.</tt></dd></dl>
+ <dl><dt><a name="-swap_two_opt"><strong>swap_two_opt</strong></a>(solution, i, k)</dt><dd><tt>Swap&nbsp;cities&nbsp;between&nbsp;i&nbsp;and&nbsp;k&nbsp;in&nbsp;solution.</tt></dd></dl>
+ <dl><dt><a name="-two_opt"><strong>two_opt</strong></a>(solution)</dt><dd><tt>Peforms&nbsp;2-opt.<br>
+&nbsp;<br>
+Source&nbsp;:<br>
+https://github.com/rellermeyer/99tsp/blob/master/python/2opt/TSP2opt.py</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>KEYDOWN</strong> = 2<br>
+<strong>K_RETURN</strong> = 13<br>
+<strong>MOUSEBUTTONDOWN</strong> = 5<br>
+<strong>QUIT</strong> = 12<br>
+<strong>app_desc</strong> = 'Traveling salesman problem'<br>
+<strong>city_color</strong> = [255, 0, 127]<br>
+<strong>city_radius</strong> = 3<br>
+<strong>font_color</strong> = [255, 255, 255]<br>
+<strong>screen_x</strong> = 510<br>
+<strong>screen_y</strong> = 510</td></tr></table>
+</body></html>

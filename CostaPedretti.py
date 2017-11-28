@@ -1,8 +1,14 @@
-"""Traveling salesman problem."""
+"""
+Traveling salesman problem solver.
+
+The following code is used to try to find a solution to the TSP.
+Using City and Individual (path) class it is possible to find a solution
+approaching the real result. This code is optimized to take less time
+to execute not to find the absolute shortest path.
+"""
 import argparse
 import math
 import random
-import secrets
 import sys
 import time
 from copy import copy
@@ -10,11 +16,18 @@ from copy import copy
 import pygame
 from pygame.locals import K_RETURN, KEYDOWN, MOUSEBUTTONDOWN, QUIT
 
+import secrets
 
 app_desc = "Traveling salesman problem"
 
+
 class City:
-    """Object that take the name of the city and it's coordonates."""
+    """
+    Object that take the name of the city and it's coordonates.
+
+    This object is used to compute and compare distance between towns
+    in order to improve path length.
+    """
 
     def __init__(self, name, x, y):
         """Init city object."""
@@ -37,10 +50,10 @@ class City:
         return str(self)
 
     def distance_to(self, other):
-        """Compute distance between self and other."""
+        """Compute distance between self and other city."""
         dx = self.x - other.x
         dy = self.y - other.y
-        return math.sqrt(dx**2 + dy**2)
+        return math.hypot(dx, dy)
 
     def __eq__(self, other):
         """Compare two cities."""
@@ -51,11 +64,16 @@ class City:
         return False
 
 
-class Individu:
-    """Class that take a possible path as value."""
+class Individual:
+    """
+    Class that take a possible path as value.
+
+    This object is used to compute parameters and manipulate paths in an easier
+    way.
+    """
 
     def __init__(self, path):
-        """Init Individu object."""
+        """Init Individual object."""
         # list of City objects
         self.path = path
         self.length = len(self.path)
@@ -64,8 +82,8 @@ class Individu:
     def p_length(self):
         """Compute path length according to cities order."""
         path_length = 0
-        for i in range(0, len(self.path)-1):
-            path_length += self.path[i].distance_to(self.path[i+1])
+        for i in range(0, len(self.path) - 1):
+            path_length += self.path[i].distance_to(self.path[i + 1])
         path_length += self.path[-1].distance_to(self.path[0])
         return path_length
 
@@ -76,7 +94,7 @@ class Individu:
         In this case we want to keep only the shortest path
         so we have to invert the result.
         """
-        return 1000/self.path_length
+        return 1000 / self.path_length
 
     def __str__(self):
         """Print object in a human readle way."""
@@ -86,7 +104,7 @@ class Individu:
         for c in self.path:
             path += c.name + " -> "
         path += self.path[0].name + "]"
-        return "Individu. " + length + fitness + path
+        return "Individual. " + length + fitness + path
 
     def __repr__(self):
         """
@@ -106,7 +124,7 @@ class Individu:
         return True
 
     def __lt__(self, other):
-        """Compare objects."""
+        """Lower than operator."""
         return self.fitness() < other.fitness()
 
     def __len__(self):
@@ -114,25 +132,25 @@ class Individu:
         return self.length
 
     def __getitem__(self, i):
-        """Return city at i."""
+        """Return city at position i."""
         if i < len(self.path):
             return self.path[i]
         else:
             raise IndexError("max value is ", len(self.path), "current ", i)
 
     def __setitem__(self, i, value):
-        """Set city at i."""
+        """Set value for city at position i."""
         if i < len(self.path):
             self.path[i] = value
         else:
             raise IndexError("max value is ", len(self.path), "current ", i)
 
     def index(self, value):
-        """Return index of value in self.path."""
+        """Return value's position in self.path."""
         return self.path.index(value)
 
     def insert(self, i, value):
-        """Insert value in self.path at i."""
+        """Insert value in self.path at position i."""
         self.path.append(i, value)
 
     def __contains__(self, city):
@@ -144,10 +162,10 @@ class Individu:
         self.path.extend(datas)
 
 
-screen_x = 500
-screen_y = 500
+screen_x = 510
+screen_y = 510
 
-city_color = [255, 0, 127]  # blue
+city_color = [255, 0, 127]  # pink
 city_radius = 3
 
 font_color = [255, 255, 255]  # white
@@ -211,7 +229,7 @@ def draw_line(screen, font, cities, text):
 
 def init_solutions(cities, solutions, M):
     """Init first random solutions."""
-    solutions.append(Individu(cities))
+    solutions.append(Individual(cities))
     for i in range(1, M):
         create_random_individual(cities, solutions)
 
@@ -220,10 +238,11 @@ def create_random_individual(cities, solutions):
     """Create random individual from cities list."""
     cities = copy(cities)
     random.shuffle(cities, random.random)
-    new_individu = Individu(cities)
+    new_individu = Individual(cities)
     while(new_individu in solutions):
         random.shuffle(cities, random.random)
-        new_individu = Individu(cities)
+        new_individu = Individual(cities)
+
     solutions.insert(0, new_individu)
 
 
@@ -233,53 +252,51 @@ def swap_two_opt(solution, i, k):
     new_solution = path[0:i]
     new_solution.extend(reversed(path[i:k + 1]))
     new_solution.extend(path[k + 1:])
-    new_solution = Individu(new_solution)
+    new_solution = Individual(new_solution)
     assert len(new_solution) == len(solution)
     return new_solution
 
-def extended_two_opt(solution, gui, screen, font, text):
+
+def extended_two_opt(solution, gui, screen, font, text, maxtime, start):
     """
-    Peforms 2-opt.
+    Peform extended 2-opt.
 
     Source :
     https://github.com/rellermeyer/99tsp/blob/master/python/2opt/TSP2opt.py
     """
-    improvement = False
     best_solution = solution
     best_distance = solution.path_length
     length = len(solution)
-    """while improvement:
-        improvement = False"""
+
     for i in range(length - 1):
         for j in range(i, length):
-            new_route = swap_two_opt(best_solution, i, j)
-            new_distance = new_route.path_length
-            if new_distance < best_distance:
-                best_distance = new_distance
-                best_solution = new_route
-                improvement = True
-                if gui:
-                    draw_line(screen, font, best_solution, text)
+            if maxtime is 0 or time.time() - start < maxtime:
+                new_route = swap_two_opt(best_solution, i, j)
+                if new_route.path_length < best_distance:
+                    best_distance = new_route.path_length
+                    best_solution = new_route
+                    if gui:
+                        draw_line(screen, font, best_solution, text)
+            else:
+                assert len(best_solution) == length
+                return best_solution
     assert len(best_solution) == length
     return best_solution
 
+
 def two_opt(solution):
     """
-    Peforms 2-opt.
+    Peform a short random 2-opt.
 
-    Source :
+    Inspiration :
     https://github.com/rellermeyer/99tsp/blob/master/python/2opt/TSP2opt.py
     """
-
-
-    improvement = True
     best_distance = solution.path_length
     length = len(solution)
 
+    # use secrets for more anthropy
     i = secrets.randbelow(length - 1)
-    j = i
-    while j <= i:
-        j = secrets.randbelow(length)
+    j = random.randint(i, length - 1)
 
     new_route = swap_two_opt(solution, i, j)
     new_distance = new_route.path_length
@@ -289,27 +306,27 @@ def two_opt(solution):
     assert len(solution) == length
     return solution
 
-def mutate_using_two_opt(solutions):
-    """Mutate using special two opt."""
-    for i in range(len(solutions)):
-        solutions[i] = two_opt(solutions[i])
-
 
 def multiply_using_gSC(solutions, number_of_multiplication):
     """Multiply using greedy_subtour_crossover function."""
     i = 0
     for i in range(number_of_multiplication):
-        new_individual = greedy_subtour_crossover(solutions[i], solutions[secrets.randbelow(len(solutions))])
+        new_individual = greedy_subtour_crossover(
+            solutions[i], solutions[secrets.randbelow(len(solutions))])
         solutions.append(new_individual)
 
 
 def greedy_subtour_crossover(ga, gb):
-    """Multiply individuals according to Greedy Subtour Crossover."""
+    """
+    Multiply individuals according to Greedy Subtour Crossover.
+
+    Source: http://www.gcd.org/sengoku/docs/arob98.pdf
+    """
     fa = True
     fb = True
     g = list()
 
-    length = len(ga)-1
+    length = len(ga) - 1
     rand = secrets.randbelow(length)
     t = ga[rand]
     x = rand
@@ -337,7 +354,7 @@ def greedy_subtour_crossover(ga, gb):
     for city in cities_not_in_g:
         g.append(city)
 
-    g = Individu(g)
+    g = Individual(g)
     return g
 
 
@@ -351,11 +368,12 @@ def ga_solve(filename=None, gui=True, maxtime=0):
         fillArrayWithData(filename, cities)
     else:
         collecting = True
-
     # init pygame and draw cities
     if gui:
         window, screen, font = init_game()
         draw(screen, font, cities)
+    else:
+        window = screen = font = None
 
     # if file is not specified, collect points from user input
     while collecting:
@@ -363,14 +381,20 @@ def ga_solve(filename=None, gui=True, maxtime=0):
 
     if gui:
         # draw the line
-        draw_line(screen, font, cities, "Situation initiale!")
+        draw_line(screen, font, cities, "Initial situation!")
+
+    length = len(cities)
 
     # number of individuals
-    M = 30 if len(cities) >= 50 else 60
+    M = 15
 
-    # TODO find a way to dynamicaly change the percentage during
-    # execution
-    pe = 3/10
+    # percentage of individuals to eliminate
+    pe = 1 / 2
+    # percentage of individuals to mutate using 2 opt
+    po = 1 / 2
+
+    nb_2opt = int(length / 100) if length > 100 else 2
+
     # solve and draw here
     # init. Generate M random individuals
     solutions = []
@@ -378,42 +402,59 @@ def ga_solve(filename=None, gui=True, maxtime=0):
 
     best_solution = 1000
     stagnation_len = 0
-    keep_finding = True
-
-    while keep_finding and (maxtime is 0 or time.time() - start < maxtime):
+    max_stagnation = 1
+    while True and (maxtime is 0 or time.time() - start < maxtime):
 
         # sort solutions in order to remove the worst population
         solutions = sorted(solutions, reverse=True)
 
-
         # draw the line
         if gui:
-            draw_line(screen, font, solutions[0], "Meilleur chemin trouvé actuellement!")
+            draw_line(
+                screen,
+                font,
+                solutions[0],
+                "Actual best solution")
 
         if solutions[0].fitness() == best_solution:
-            if stagnation_len < 1:
+            if stagnation_len < max_stagnation:
                 stagnation_len += 1
-                solutions[0] = extended_two_opt(solutions[0], gui, screen, font, "Meilleur chemin trouvé actuellement!")
+                # if the solution stagnates, mutate the best a lot
+            elif stagnation_len is max_stagnation:
+                solutions[0] = extended_two_opt(
+                    solutions[0],
+                    gui,
+                    screen,
+                    font,
+                    "Actual best solution", maxtime, start)
+                stagnation_len += 1
+            elif (maxtime is not 0 and time.time() - start < maxtime):
+                stagnation_len = 0
             else:
-                keep_finding = False
+                break
         else:
             best_solution = solutions[0].fitness()
             stagnation_len = 0
 
-            # Natural selection
+        old_len = len(solutions)
+
+        # Natural selection
         quantity_to_eliminate = int(M * pe)
         del solutions[-quantity_to_eliminate:]
 
-            # Multplication Choose M * pe/100 pairs of individuals randomly
-            # and produce result of pair multiplication
+        # Multplication using greedy subtour crossover
+        multiply_using_gSC(solutions, quantity_to_eliminate)
 
-        multiply_using_gSC(solutions, M - len(solutions))
+        length = len(solutions)
+        assert(old_len == length)
 
-            # Mutation by 2 opt
-        mutate_using_two_opt(solutions)
+        # Mutation by 2 opt
+        for i in range(int(length * po)):
+            for j in range(nb_2opt):
+                solutions[i] = two_opt(solutions[i])
 
     """if gui:
-        draw_line(screen, font, solutions[0], "Résultat possible!")
+        draw_line(screen, font, solutions[0], "Possible result!")
         while True:
             event = pygame.event.wait()
             if event.type == KEYDOWN or event.type == QUIT:
@@ -423,6 +464,7 @@ def ga_solve(filename=None, gui=True, maxtime=0):
     for city in solutions[0].path:
         cities_name.append(city.name)
     return (solutions[0].path_length, cities_name)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=app_desc)
@@ -451,4 +493,5 @@ if __name__ == "__main__":
     if args.nogui:
         gui = False
 
-    ga_solve(filename, gui, maxtime)
+    path_length, cities_list = ga_solve(filename, gui, maxtime)
+    print("total length : ", path_length)
